@@ -1,15 +1,73 @@
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-//db
 generator client {
   provider = "prisma-client-js"
 }
 
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
+  id            String   @id @default(cuid())
+  email         String   @unique
+  name          String?
+  githubId      String   @unique
+  avatarUrl     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  projects      Project[]
+  webhooks      Webhook[]
+}
+
+model Project {
+  id            String   @id @default(cuid())
+  name          String
+  techStack     String[]
+  template      String
+  startDate     DateTime
+  endDate       DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  repository    Repository?
+}
+
+model Repository {
+  id            String   @id @default(cuid())
+  githubRepoId  String   @unique
+  name          String
+  fullName      String
+  private       Boolean
+  cloneUrl      String
+  htmlUrl       String
+  createdAt     DateTime @default(now())
+
+  projectId     String   @unique
+  project       Project  @relation(fields: [projectId], references: [id])
+  commits       Commit[]
+}
+
+model Commit {
+  id            String   @id @default(cuid())
+  sha           String   @unique
+  message       String
+  generatedByAI Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  repositoryId  String
+  repository    Repository @relation(fields: [repositoryId], references: [id])
+}
+
+model Webhook {
+  id            String   @id @default(cuid())
+  url           String
+  event         String
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
 }
